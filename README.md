@@ -22,7 +22,7 @@ A production-ready AI Sales Agent integrated with Facebook Messenger, designed t
 The system is built on **n8n** using a modular "Chain-over-Agent" architecture. You can find the visual representation of the workflow below:
 
 ### Workflow Screenshot
-![n8n Workflow Screenshot]([(https://github.com/Ahmed-Attia-div/Messenger-AI-Sales-Agent/blob/main/Workflow_Screenshot.png](https://github.com/Ahmed-Attia-div/Messenger-AI-Sales-Agent/blob/main/Workflow_Screenshot.png?raw=true)))
+![n8n Workflow Screenshot](Workflow_Screenshot.png)
 
 ### Project Files
 - **`messenger Ai sales agent.json`**: The complete n8n workflow file. You can import this into your n8n instance to replicate the setup.
