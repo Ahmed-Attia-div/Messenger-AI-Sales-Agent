@@ -1,0 +1,822 @@
+{
+  "name": "messanger AI sales agent",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -480,
+        1680
+      ],
+      "id": "c98b66d0-f359-4029-b85e-18137088713c",
+      "name": "When chat message received",
+      "webhookId": "49653c8b-bbe7-4fb3-ba0a-970a169f8969"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.entry[0].messaging[0].message.text }}",
+        "options": {
+          "systemMessage": "Persona: أنت \"موظف مبيعات محترف\" في براند أناقة. أسلوبك مصري شيك (يا فندم، نورتنا، تحت أمرك). مهمتك مساعدة العميل بذكاء.\n\nMessenger Formatting Rules (Strict):\n\nممنوع استخدام النجوم (**) أو علامات الترقيم البرمجية (Markdown).\n\nاستخدم المسافات والسطور الجديدة فقط للتنظيم.\n\nاجعل ردودك قصيرة ومناسبة لشاشة الموبايل.\n\nOperational Protocol:\n\nالمنتجات: استخدم google_sheets_tool واعرض 3 خيارات فقط. لا تألف منتجات. اذكر السعر بوضوح.\n\nالمخزون: لا تذكر أرقام. قل \"متاح شحن فوري\" أو \"الكمية قربت تخلص\".\n\nالسياسات: أي سؤال عن (شحن، مقاسات، فروع) استخدم vector_store_tool فوراً. إذا فشلت، اطلب التواصل مع [01227574796].\n\nOrdering Protocol (One Question at a Time):\n\nقاعدة ذهبية: اطلب البيانات \"واحدة بواحدة\" بالترتيب: (الاسم)، ثم بعد رده اطلب (الموبايل)، ثم (المحافظة والعنوان)، ثم (المقاس واللون)، وأخيراً اسأل عن (طريقة الدفع: كاش أو فودافون كاش). ممنوع طلب أكثر من معلومة في رسالة واحدة.\n\nالحساب: (سعر المنتج + شحن المحافظة من الـ RAG). يجب إبلاغ العميل بوضوح: \"سعر المنتج {X} والشحن لـ {المحافظة} هو {Y}، الإجمالي {Z} جنيه\".\n\nTechnical Protocol (The Final Confirm):\nعند موافقة العميل النهائية، يجب أن يكون ردك الأخير منظماً كالتالي:\n\nرسالة الشكر: \"نورتنا يا فندم، تم تسجيل طلبك بنجاح وقسم الشحن هيتواصل معاك.\"\n\nملخص الأوردر (للعلم): اكتب ملخصاً بسيطاً (الاسم، المنتج، الإجمالي، طريقة الدفع).\n\nالبيانات التقنية (في آخر الرسالة): اكتب سطر البيانات ده عشان السيرفر يقراه:\nData Summary: [customer_name], [phone_number], [full_address], [order_details], [total_price], [payment_method]\n\nكلمة السر: اكتب الكلمة التالية في سطر مستقل تماماً في النهاية: CONFIRMED_ORDER\n\nConstraints:\n\nلا تطلب \"طريقة الدفع\" في نهاية المحادثة، بل كخطوة أساسية قبل ملخص الأوردر.\n\nتأكد أن order_details تشمل (المنتج + المقاس + اللون).\n\nلا تستخدم لغة الروبوتات؛ حافظ على الروح المصرية الشيك."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -96,
+        1040
+      ],
+      "id": "97736f3d-a1dc-40d3-8149-aaeac50e2286",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.entry[0].messaging[0].sender.id }}",
+        "sessionTTL": 3600,
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        -128,
+        1264
+      ],
+      "id": "a93d83c3-eb72-420b-9294-26d52af3d72b",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "CrtY2QQO3xeEBr3B",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 1000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        1264
+      ],
+      "id": "3f9708fb-4882-4588-a679-e98337a53fdc",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "eovg2xeHBVmVgFvJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.entry[0].messaging[0].sender.id }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        1904
+      ],
+      "id": "a5ef6330-e98a-4423-b2b2-c9178b59db01",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f8bd5d8d-2d54-4f1f-a266-213622338c34",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4a9cj0eNqKBoei5M",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1536
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        224
+      ],
+      "id": "3e6098f3-c12c-47fe-acd5-7af618d88e78",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "eovg2xeHBVmVgFvJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1e6HDi3iY8k4o51NVtFnv2wve6u3eaxcX",
+          "mode": "list",
+          "cachedResultName": "ANNAQA Customer Support Agent data",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1e6HDi3iY8k4o51NVtFnv2wve6u3eaxcX"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        208
+      ],
+      "id": "afbe8a02-54e5-4dd1-bd4c-2ebfc8c59ce8",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "8tsq5p7SQTf2EdUa",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "18UR-5BbQ9WpSBmRJSr80a0v50gXsvjiV",
+          "mode": "list",
+          "cachedResultName": "Annaqa data.docx",
+          "cachedResultUrl": "https://docs.google.com/document/d/18UR-5BbQ9WpSBmRJSr80a0v50gXsvjiV/edit?usp=drivesdk&ouid=116120269919933459179&rtpof=true&sd=true"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -256,
+        208
+      ],
+      "id": "8d766469-0ee9-4046-b6a4-dad8e8ac86e5",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "8tsq5p7SQTf2EdUa",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        224
+      ],
+      "id": "94ade552-2ddb-418c-9da3-85125846479d",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Your ONLY source for brand policies, shipping, returns, and \"trying on clothes\". Use this tool whenever the customer asks about shipping, delivery, trying items with the courier, or sizes.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 3,
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        1264
+      ],
+      "id": "ba335345-49b4-40a6-b756-7feab15f0982",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4a9cj0eNqKBoei5M",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 1536
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        1472
+      ],
+      "id": "6ccacaf9-8f70-4bda-9c9f-9c00b842fdf3",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "eovg2xeHBVmVgFvJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chunkSize": 500,
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        176,
+        432
+      ],
+      "id": "1491d60e-b982-472d-a398-0f2aa3a7e0c0",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"customer_name\": {\n      \"type\": \"string\",\n      \"description\": \"الاسم الثنائي للعميل\"\n    },\n    \"phone_number\": {\n      \"type\": \"string\",\n      \"description\": \"رقم موبايل العميل\"\n    },\n    \"full_address\": {\n      \"type\": \"string\",\n      \"description\": \"المحافظة مدمجة مع العنوان التفصيلي في جملة واحدة\"\n    },\n    \"products_ordered\": {\n      \"type\": \"string\",\n      \"description\": \"اسم المنتج + المقاس + اللون (مثال: هودي أسود - XL)\"\n    },\n    \"total_price\": {\n      \"type\": \"number\",\n      \"description\": \"إجمالي السعر (سعر المنتج + الشحن) كرقـم فقط\"\n    },\n    \"payment_method\": {\n      \"type\": \"string\",\n      \"description\": \"طريقة الدفع (كاش أو فودافون كاش)\"\n    }\n  },\n  \"required\": [\"customer_name\", \"phone_number\", \"full_address\", \"products_ordered\", \"total_price\", \"payment_method\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        1360
+      ],
+      "id": "9530ef73-8d75-4b87-92ee-4077301b1f01",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=\"أنت محرك استخراج بيانات. خذ المحادثة التالية واستخرج منها القيم المطلوبة لملء القالب (Schema).\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        720,
+        1136
+      ],
+      "id": "6654eee3-b4dc-499e-a543-12847acc9daf",
+      "name": "Basic LLM Chain",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        736,
+        1360
+      ],
+      "id": "f78c5701-f8ad-4ed3-83bd-2c2d88511ad8",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "eovg2xeHBVmVgFvJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1g4R_-VYi9XmAXGdCxXq9hN44jBgc-DtJG1BGojey9pw",
+          "mode": "list",
+          "cachedResultName": "Anaka - Orders",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1g4R_-VYi9XmAXGdCxXq9hN44jBgc-DtJG1BGojey9pw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1g4R_-VYi9XmAXGdCxXq9hN44jBgc-DtJG1BGojey9pw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order Date": "={{ $now.format('yyyy-MM-dd HH:mm') }}",
+            "Phone Number": "={{ $json.output.phone_number }}",
+            "Address": "={{ $json.output.full_address }}",
+            "Products Ordered": "={{ $json.output.products_ordered }}",
+            "Total Price": "={{ $json.output.total_price }}",
+            "Payment Method": "={{ $json.output.payment_method }}",
+            "Customer Name": "={{ $json.output.customer_name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Order Date",
+              "displayName": "Order Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Products Ordered",
+              "displayName": "Products Ordered",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Price",
+              "displayName": "Total Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Method",
+              "displayName": "Payment Method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1072,
+        1136
+      ],
+      "id": "06f1155d-0219-4705-8a30-f57bc0e7af79",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VctFb5AdedMPWSMk",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "62cce968-9d06-4e26-acb5-7b4c0118fdea",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "CONFIRMED_ORDER",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        1136
+      ],
+      "id": "975d624d-86d5-408d-a93c-f2bac03ff054",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get many rows in Supabase",
+        "operation": "getAll"
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        1472
+      ],
+      "id": "d3f6dc50-8189-41b8-b1a7-e0edf98fb774",
+      "name": "Get many rows in Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4a9cj0eNqKBoei5M",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1NojpC0RTMnP5k0x3kSBI_pphpI7isbG6yACGiBXWT38",
+          "mode": "list",
+          "cachedResultName": "Anaka Brand - Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NojpC0RTMnP5k0x3kSBI_pphpI7isbG6yACGiBXWT38/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NojpC0RTMnP5k0x3kSBI_pphpI7isbG6yACGiBXWT38/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        288,
+        1264
+      ],
+      "id": "0ea5c660-f681-4ea2-a07a-a9c2c445c094",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "notesInFlow": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VctFb5AdedMPWSMk",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "8f5437b7-d502-4209-8103-ef2d8cae6210",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        848
+      ],
+      "id": "31c7f82c-e198-43ee-abdf-16a9b50b7d6d",
+      "name": "Webhook",
+      "webhookId": "8f5437b7-d502-4209-8103-ef2d8cae6210"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -48,
+        800
+      ],
+      "id": "fbd98991-af5d-4cf6-99f4-8c9305e86f06",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v25.0/{{ $('Webhook').item.json.body.entry[0].messaging[0].recipient.id }}/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "EAANOnuuA1FMBRMtxhxxT7kh2g7CmjHmlyyjZBhCFCRF8edGW53hBKnddUWm9EsXU5gCDq6RdXNGBZBx2pW9fWIdyaTwJnyQOvbQqZCFy7b8Wsin3RFEVSRkJ9prYDBPfbH7E2ZCxZCaZALhtzB3wv6iEZAlXz2o055fhH8W8GKFsXliLQUHzou87Psk4O80H70iSKAh"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  recipient: {\n    id: $('Webhook').item.json.body.entry[0].messaging[0].sender.id\n},\n  message: {\n    text: $json.output\n  }\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        496,
+        944
+      ],
+      "id": "c0caefab-f386-4eec-be6d-3f579a36ea36",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7847d1aa-a712-4dce-b0d3-b064c2c1d1ff",
+  "meta": {
+    "instanceId": "5cdaada60d5ec57f2844afc07ce6107bae9b62a654ca350e5a3b34c776b2edd6"
+  },
+  "id": "cJQ8UCdZLgWd62q0",
+  "tags": []
+}
