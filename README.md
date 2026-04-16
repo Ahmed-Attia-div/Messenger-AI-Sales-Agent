@@ -18,13 +18,21 @@ A production-ready AI Sales Agent integrated with Facebook Messenger, designed t
 - **Database/CRM:** Google Sheets API
 - **Integration:** Facebook Messenger API (Webhooks)
 
-## 🏗️ Architecture
-The system follows a modular "Chain-over-Agent" architecture:
-1. **The Brain (AI Agent):** Handles natural conversation and tool selection.
-2. **The Guard (IF Node):** Triggers order processing only upon final confirmation.
-3. **The Parser (LLM Chain):** Extracts structured JSON from conversation logs for database entry.
-4. **The Database (Google Sheets):** Acts as a lightweight CRM and Inventory system.
+## 🏗️ Architecture & Workflow
+The system is built on **n8n** using a modular "Chain-over-Agent" architecture. You can find the visual representation of the workflow below:
+
+### Workflow Screenshot
+![n8n Workflow Screenshot]([./workflow-screenshot.png](https://github.com/Ahmed-Attia-div/Messenger-AI-Sales-Agent/blob/main/Workflow_Screenshot.png))
+
+### Project Files
+- **`messenger Ai sales agent.json`**: The complete n8n workflow file. You can import this into your n8n instance to replicate the setup.
 
 ## 📈 Optimization & Performance
-- **Token Efficiency:** Implemented server-side filtering (GQL) for Google Sheets to handle large inventories without exceeding LLM context limits.
+- **Token Efficiency:** Implemented server-side filtering for Google Sheets to handle large inventories without exceeding LLM context limits.
 - **Error Handling:** Integrated Auto-fix parsers to handle inconsistent LLM outputs.
+
+## 📖 How to Use
+1. **Import Workflow:** Download the `.json` file from this repository and import it into n8n.
+2. **Setup Credentials:** Add your OpenAI, Supabase, and Facebook API credentials.
+3. **Configure Sheets:** Connect your Google Sheet following the provided schema.
+4. **Deploy:** Set the Webhook to active and connect it to your Facebook Developer App.
